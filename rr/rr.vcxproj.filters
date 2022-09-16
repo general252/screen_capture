@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="capture\d3d9_screen_capture.cc">
+      <Filter>capture</Filter>
+    </ClCompile>
+    <ClCompile Include="capture\window_helper.cc">
+      <Filter>capture</Filter>
+    </ClCompile>
+    <ClCompile Include="encode\h264_encoder.cpp">
+      <Filter>encode</Filter>
+    </ClCompile>
+    <ClCompile Include="encode\video_converter.cpp">
+      <Filter>encode</Filter>
+    </ClCompile>
+    <ClCompile Include="capture\d3d11_screen_capture.cc">
+      <Filter>capture</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="capture">
+      <UniqueIdentifier>{cb7f85da-d55d-41b5-acaa-a42b2bb1a8b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="encode">
+      <UniqueIdentifier>{45990567-76bf-4b33-856f-b4103d7ed781}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="capture\d3d9_screen_capture.h">
+      <Filter>capture</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\screen_capture.h">
+      <Filter>capture</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\window_helper.h">
+      <Filter>capture</Filter>
+    </ClInclude>
+    <ClInclude Include="encode\av_common.h">
+      <Filter>encode</Filter>
+    </ClInclude>
+    <ClInclude Include="encode\av_encoder.h">
+      <Filter>encode</Filter>
+    </ClInclude>
+    <ClInclude Include="encode\h264_encoder.h">
+      <Filter>encode</Filter>
+    </ClInclude>
+    <ClInclude Include="encode\video_converter.h">
+      <Filter>encode</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\d3d11_screen_capture.h">
+      <Filter>capture</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
