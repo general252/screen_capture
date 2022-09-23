@@ -57,8 +57,8 @@ bool H264Encoder::Init(AVConfig& video_config)
     }
 
     av_opt_set(codec_context_->priv_data, "tune", "zerolatency", 0);
-    av_opt_set_int(codec_context_->priv_data, "forced-idr", 1, 0);
-    av_opt_set_int(codec_context_->priv_data, "avcintra-class", -1, 0);
+    //av_opt_set_int(codec_context_->priv_data, "forced-idr", 1, 0);
+    //av_opt_set_int(codec_context_->priv_data, "avcintra-class", -1, 0);
 
     if (avcodec_open2(codec_context_, codec, NULL) != 0) {
         LOG("avcodec_open2() failed.\n");
@@ -194,15 +194,17 @@ int ffmpeg::H264Encoder::Encode(uint8_t* in_buffer, uint32_t in_width, uint32_t 
     ffmpeg::AVPacketPtr pkt_ptr = this->Encode(in_buffer, in_width, in_height, image_size);
 
     if (pkt_ptr != nullptr) {
-        static bool first = true;
-        if (first || IsKeyFrame(pkt_ptr->data, pkt_ptr->size)) {
-            first = false;
-            /* 编码器使用了AV_CODEC_FLAG_GLOBAL_HEADER, 这里需要添加sps, pps */
-            uint8_t* extra_data = this->GetAVCodecContext()->extradata;
-            int extra_data_size = this->GetAVCodecContext()->extradata_size;
+        if (true) {
+            static bool first = true;
+            if (first || IsKeyFrame(pkt_ptr->data, pkt_ptr->size)) {
+                first = false;
+                /* 编码器使用了AV_CODEC_FLAG_GLOBAL_HEADER, 这里需要添加sps, pps */
+                uint8_t* extra_data = this->GetAVCodecContext()->extradata;
+                int extra_data_size = this->GetAVCodecContext()->extradata_size;
 
-            memcpy(out_buffer.get(), extra_data, extra_data_size);
-            frame_size += extra_data_size;
+                memcpy(out_buffer.get(), extra_data, extra_data_size);
+                frame_size += extra_data_size;
+            }
         }
 
         memcpy(out_buffer.get() + frame_size, pkt_ptr->data, pkt_ptr->size);

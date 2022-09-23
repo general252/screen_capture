@@ -17,6 +17,24 @@
     <ClCompile Include="capture\d3d11_screen_capture.cc">
       <Filter>capture</Filter>
     </ClCompile>
+    <ClCompile Include="rtp\h264_packet.cpp">
+      <Filter>rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="rtp\packet.cpp">
+      <Filter>rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="rtp\packetizer.cpp">
+      <Filter>rtp</Filter>
+    </ClCompile>
+    <ClCompile Include="net\easywsclient.cpp">
+      <Filter>net</Filter>
+    </ClCompile>
+    <ClCompile Include="net\udp_client.cpp">
+      <Filter>net</Filter>
+    </ClCompile>
+    <ClCompile Include="binary\binary.cpp">
+      <Filter>binary</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="capture">
@@ -24,6 +42,15 @@
     </Filter>
     <Filter Include="encode">
       <UniqueIdentifier>{45990567-76bf-4b33-856f-b4103d7ed781}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rtp">
+      <UniqueIdentifier>{69452de6-e071-4798-ac15-43a0b9b1efaf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="net">
+      <UniqueIdentifier>{7ccf78f5-3ba6-46c0-9022-bc3b8db31555}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="binary">
+      <UniqueIdentifier>{fb82b860-6cb3-4815-bcbb-44399a05973d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -50,6 +77,30 @@
     </ClInclude>
     <ClInclude Include="capture\d3d11_screen_capture.h">
       <Filter>capture</Filter>
+    </ClInclude>
+    <ClInclude Include="rtp\h264_packet.h">
+      <Filter>rtp</Filter>
+    </ClInclude>
+    <ClInclude Include="rtp\packet.h">
+      <Filter>rtp</Filter>
+    </ClInclude>
+    <ClInclude Include="rtp\packetizer.h">
+      <Filter>rtp</Filter>
+    </ClInclude>
+    <ClInclude Include="net\easywsclient.hpp">
+      <Filter>net</Filter>
+    </ClInclude>
+    <ClInclude Include="net\udp_client.h">
+      <Filter>net</Filter>
+    </ClInclude>
+    <ClInclude Include="binary\base64.h">
+      <Filter>binary</Filter>
+    </ClInclude>
+    <ClInclude Include="binary\binary.h">
+      <Filter>binary</Filter>
+    </ClInclude>
+    <ClInclude Include="binary\timestamp.h">
+      <Filter>binary</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
