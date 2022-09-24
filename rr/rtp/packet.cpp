@@ -82,7 +82,7 @@ namespace rtp
         // The first byte contains the version, padding bit, extension bit,
         // and csrc size.
         buf[0] = (this->version << versionShift) | uint8_t(this->csrc.size());
-        if (this->padding ){
+        if (this->padding) {
             buf[0] |= 1 << paddingShift;
         }
 
@@ -97,7 +97,7 @@ namespace rtp
         }
 
         binary::BigEndian::PutUint16(buf + 2, this->sequenceNumber);
-        binary::BigEndian::PutUint32(buf+4, this->timestamp);
+        binary::BigEndian::PutUint32(buf + 4, this->timestamp);
         binary::BigEndian::PutUint32(buf + 8, this->ssrc);
 
         int32_t n = 12;
@@ -169,6 +169,160 @@ namespace rtp
 
         if (n != size) {
             printf("size error. n: %d, size: %d\n", n, size);
+        }
+
+        return n;
+    }
+
+    int32_t Header::Unmarshal(const std::string& _buf, std::string& err)
+    {
+        err.clear();
+
+        if (_buf.size() < headerLength) {
+            err.assign(errHeaderSizeInsufficient);
+            printf("%s: %d < %d\n", errHeaderSizeInsufficient, _buf.size(), headerLength);
+            return 0;
+        }
+
+        /*
+         *  0                   1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * |V=2|P|X|  CC   |M|     PT      |       sequence number         |
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * |                           timestamp                           |
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * |           synchronization source (SSRC) identifier            |
+         * +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+         * |            contributing source (CSRC) identifiers             |
+         * |                             ....                              |
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+
+        const char* buf = _buf.data();
+
+        this->version = buf[0] >> versionShift & versionMask;
+        this->padding = (buf[0] >> paddingShift & paddingMask) > 0;
+        this->extension = (buf[0] >> extensionShift & extensionMask) > 0;
+        int32_t nCSRC = int32_t(buf[0] & ccMask);
+
+        this->csrc.resize(nCSRC);
+
+        int32_t n = csrcOffset + (nCSRC * csrcLength);
+        if (_buf.size() < n) {
+            err.assign(errHeaderSizeInsufficient);
+            printf("size %d < %d: %s\n", _buf.size(), n, errHeaderSizeInsufficient);
+            return n;
+        }
+
+        this->marker = (buf[1] >> markerShift & markerMask) > 0;
+        this->payloadType = buf[1] & ptMask;
+
+        this->sequenceNumber = binary::BigEndian::Uint16(buf + seqNumOffset);
+        this->timestamp = binary::BigEndian::Uint32(buf + timestampOffset);
+        this->ssrc = binary::BigEndian::Uint32(buf + ssrcOffset);
+
+        for (size_t i = 0; i < this->csrc.size(); i++) {
+            int32_t offset = csrcOffset + (i * csrcLength);
+            this->csrc[i] = binary::BigEndian::Uint32(buf + offset);
+        }
+
+        this->extensions.clear();
+
+        if (this->extension) {
+
+            int32_t expected = n + 4;
+            if (_buf.size() < expected) {
+                err.assign(errHeaderSizeInsufficientForExtension);
+                printf("size %d < %d: %s\n", _buf.size(), expected, errHeaderSizeInsufficientForExtension);
+                return n;
+            }
+
+            this->extensionProfile = binary::BigEndian::Uint16(buf + n);
+            n += 2;
+            int32_t extensionLength = int(binary::BigEndian::Uint16(buf + n)) * 4;
+            n += 2;
+
+            expected = n + extensionLength;
+            if (_buf.size() < expected) {
+                err.assign(errHeaderSizeInsufficientForExtension);
+                printf("size %d < %d: %s\n", _buf.size(), expected, errHeaderSizeInsufficientForExtension);
+                return n;
+            }
+
+
+            switch (this->extensionProfile)
+            {
+                // RFC 8285 RTP One Byte Header Extension
+            case extensionProfileOneByte:
+            {
+                int32_t end = n + extensionLength;
+                while (n < end)
+                {
+                    if (buf[n] == 0x00) { // padding
+                        n++;
+                        continue;
+                    }
+
+                    uint8_t extid = buf[n] >> 4;
+                    int32_t len = int(buf[n] & ~0xF0 + 1);
+                    n++;
+
+                    if (extid == extensionIDReserved) {
+                        break;
+                    }
+
+                    Extension extension;
+                    extension.id = extid;
+                    extension.payload.assign(buf + n, len);
+
+                    this->extensions.push_back(extension);
+                    n += len;
+                }
+            } break;
+            // RFC 8285 RTP Two Byte Header Extension
+            case extensionProfileTwoByte:
+            {
+                int32_t end = n + extensionLength;
+                while (n < end)
+                {
+                    if (buf[n] == 0x00) { // padding
+                        n++;
+                        continue;
+                    }
+
+                    uint8_t extid = buf[n];
+                    n++;
+
+                    int32_t len = int(buf[n]);
+                    n++;
+
+
+                    Extension extension;
+                    extension.id = extid;
+                    extension.payload.assign(buf + n, len);
+                    this->extensions.push_back(extension);
+                    n += len;
+                }
+
+            } break;
+            default:
+            {
+                if (_buf.size() < n + extensionLength) {
+                    err.assign(errHeaderSizeInsufficientForExtension);
+                    printf("%s: %d < %d\n", errHeaderSizeInsufficientForExtension, _buf.size(), n + extensionLength);
+                    return n;
+                }
+
+                Extension extension;
+                extension.id = 0;
+                extension.payload.assign(buf + n, extensionLength);
+                this->extensions.push_back(extension);
+
+                n += extension.payload.size();
+            } break;
+            }
+
         }
 
         return n;
@@ -289,6 +443,29 @@ namespace rtp
 
 
         return n + m + int32_t(this->paddingSize);
+    }
+
+    bool Packet::Unmarshal(std::string& _buf, std::string& err)
+    {
+        int32_t n = this->header.Unmarshal(_buf, err);
+        if (err.size() > 0) {
+            return false;
+        }
+
+        int32_t end = (int32_t)_buf.size();
+        if (this->header.padding) {
+            this->paddingSize = _buf[end - 1];
+            end -= int32_t(this->paddingSize);
+        }
+
+        if (end < n) {
+            err.assign(errTooSmall);
+            return false;
+        }
+
+        this->payload.assign(_buf.data() + n, end - n);
+
+        return true;
     }
 
     std::string Packet::String()

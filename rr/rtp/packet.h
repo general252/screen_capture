@@ -1,5 +1,7 @@
 #pragma once
 
+// rtp packet
+
 #include <string>
 #include <cstdint>
 #include <vector>
@@ -50,6 +52,10 @@ namespace rtp
         // MarshalTo serializes the header and writes to the buffer.
         int32_t Marshal(std::string& _buf, std::string& err);
 
+        // Unmarshal parses the passed byte slice and stores the result in the Header.
+        // It returns the number of bytes read n and any error.
+        int32_t Unmarshal(const std::string& _buf, std::string& err);
+
         // SetExtension sets an RTP header extension
         bool SetExtension(uint8_t id, const std::string& payload);
 
@@ -78,12 +84,15 @@ namespace rtp
         // Marshal serializes the packet into bytes.
         int32_t Marshal(std::string& _buf, std::string& err);
 
+        // Unmarshal parses the passed byte slice and stores the result in the Packet.
+        bool Unmarshal(std::string& _buf, std::string& err);
+
         std::string String();
 
     public:
         Header header;
         std::string payload;
-        uint8_t paddingSize;
+        uint8_t paddingSize = 0;
     };
 
 }

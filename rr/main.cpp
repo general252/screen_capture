@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
 #if USE_RTP
     xop::udp_client cli;
-    if (!cli.Create(SERVER_IP, SERVER_PORT)) {
+    if (!cli.Create(SERVER_IP, 6666)) {
         return -1;
     }
 #endif
@@ -125,11 +125,10 @@ int main(int argc, char* argv[])
             return rtpRawData;
         };
 
-        const size_t PerSendSize = 5 * 1024 * 1024 / (1000 / 5);
+        const size_t PerSendSize = 10 * 1024 * 1024 / (1000 / 5);
         while (true)
         {
             Sleep(5);
-
 
             size_t sendSize = 0;
             
@@ -144,7 +143,6 @@ int main(int argc, char* argv[])
 
                 sendSize += rtpRawData.size();
             }
-            
         }
 
         });
@@ -163,31 +161,38 @@ int main(int argc, char* argv[])
         ws->poll();
         ws->dispatch([](const std::string& message) {
             printf(">>> %s\n", message.c_str());
-        });
+            });
 #endif // USE_WEBSOCKET
 
         bool isCapture = false;
+        int64_t duration = 0;
+        int64_t captureDuration = 0;
 
-        // 计算采集时间
-        auto duration = ts.Elapsed();
-        if (duration >= peerFrameDuration) {
-            if (duration >= 1000) {
-                ts.Reset();
+        if (false) {
+            // 计算采集时间
+            duration = ts.Elapsed();
+            if (duration >= peerFrameDuration) {
+                if (duration >= 1000) {
+                    ts.Reset();
+                }
+                else {
+                    ts.AddMilliseconds(peerFrameDuration);
+                }
+
+                isCapture = true;
+
+                //printf("%I64d ms, is capture: %d\n", duration, isCapture);
             }
             else {
-                ts.AddMilliseconds(peerFrameDuration);
+                auto ms = peerFrameDuration - duration;
+                if (ms > 0) {
+                    Sleep(ms - 0);
+                    //std::this_thread::sleep_for(std::chrono::milliseconds(ms - 5));
+                }
             }
-
-            isCapture = true;
-
-            //printf("%I64d ms, is capture: %d\n", duration, isCapture);
         }
         else {
-            auto ms = peerFrameDuration - duration;
-            if (ms > 5) {
-                Sleep(ms - 5);
-                //std::this_thread::sleep_for(std::chrono::milliseconds(ms - 5));
-            }
+            isCapture = true;
         }
 
         // 采集 + 编码 + UDP发送
@@ -230,16 +235,32 @@ int main(int argc, char* argv[])
                         if (rtp_packets[i].Marshal(rtpRawData, err) > 0) {
                             // 添加 rtp 到发送队列
                             AddRtpRaw(rtpRawData);
+                            //cli.Send(rtpRawData.data(), rtpRawData.size());
                         }
                     }
 #endif
+
+
+                    auto b = std::chrono::high_resolution_clock::now();
+                    captureDuration = std::chrono::duration_cast<std::chrono::milliseconds>(b - a).count();
+                    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+                    auto lastTimeDuration = std::chrono::duration_cast<std::chrono::milliseconds>(b - lastTime).count();
+                    lastTime = b;
+
+                    printf("[%I64d] capture&encode: %I64d, lastTime: %I64d, type: %02X, len: %d\n",
+                        now, captureDuration,
+                        lastTimeDuration,
+                        out_h264_packet[4], out_h264_packet.size());
+
                 }
+            }
+        }
 
-                //auto b = std::chrono::high_resolution_clock::now();
-                //auto c = std::chrono::duration_cast<std::chrono::milliseconds>(b - a).count();
-                auto t = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
-                //printf("[%I64d] timeout: %I64d, len: %d %02X\n", t, duration, out_h264_packet.size(), out_h264_packet[4]);
+        auto sleepTime = 40 - captureDuration;
+        if (sleepTime > 0) {
+            if (sleepTime > 5) {
+                Sleep(sleepTime - 5);
             }
         }
     }

@@ -88,6 +88,7 @@
     <ClCompile Include="rtp\h264_packet.cpp" />
     <ClCompile Include="rtp\packet.cpp" />
     <ClCompile Include="rtp\packetizer.cpp" />
+    <ClCompile Include="rtp\rtp_recorder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="binary\base64.h" />
@@ -106,6 +107,7 @@
     <ClInclude Include="rtp\h264_packet.h" />
     <ClInclude Include="rtp\packet.h" />
     <ClInclude Include="rtp\packetizer.h" />
+    <ClInclude Include="rtp\rtp_recorder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -35,6 +35,9 @@
     <ClCompile Include="binary\binary.cpp">
       <Filter>binary</Filter>
     </ClCompile>
+    <ClCompile Include="rtp\rtp_recorder.cpp">
+      <Filter>rtp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="capture">
@@ -101,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="binary\timestamp.h">
       <Filter>binary</Filter>
+    </ClInclude>
+    <ClInclude Include="rtp\rtp_recorder.h">
+      <Filter>rtp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
